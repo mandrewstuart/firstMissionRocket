@@ -1,0 +1,190 @@
+<html><body>
+<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #000000;">
+</canvas>
+<div id='message'></div>
+<script>
+canvas = document.getElementById('myCanvas'),
+context = canvas.getContext('2d');
+function make_base(x, y)
+{
+  base_image = new Image();
+  base_image.src = './asteroid.png';
+  base_image.onload = function(){
+    context.drawImage(base_image, x, y);
+  }
+}
+
+const getDist = (x1,y1,x2,y2) => {
+  let x = Math.sqrt(Math.pow(x2-x1+50,2) + Math.pow(y2-y1+50,2), 1/2);
+  return x;
+}
+
+const collisionCheck = () => {
+  for(let x=0; x<asteroids.length; x++) {
+    if(getDist(Charlie.x,Charlie.y,asteroids[x].x,asteroids[x].y) < 50) {
+      document.getElementById('message').innerHTML = 'OH NO! <button style="height:100px;width:100px;" onclick="start();">Play again?</button></u>';
+      clearInterval(interval);
+    }
+  }
+}
+let asteroids = [];
+class Asteroid {
+  constructor(y) {
+    this.y = y;
+    this.x = canvas.width;
+    this.speed = Math.random()*20 + 5;
+  }
+}
+const spawnAsteroid = () => {
+  if(Math.random() > 0.98) {
+    let y = Math.random()*(document.getElementById('myCanvas').height-250);
+    asteroids.push(new Asteroid(y));
+  }
+}
+function asteroidLoop() {
+  shuffleObjects();
+  spawnAsteroid();
+  collisionCheck();
+}
+function shuffleObjects() {
+  context.clearRect(0,0,canvas.width, canvas.height);
+  asteroids.map(a => {
+    a.x = a.x-a.speed;
+    make_base(a.x, a.y);
+  });
+  asteroids = asteroids.filter(a => {return a.x > -25});
+  drawRocket();
+}
+class Rocket {
+  constructor() {
+    this.y = canvas.height/2-75;
+    this.x = 50;
+  }
+}
+Charlie = new Rocket();
+function drawRocket(direction = 'Right') {
+  rocket = new Image();
+  rocket.src = './rocket' + direction + '.png';
+  rocket.onload = function(){
+    context.drawImage(rocket, Charlie.x, Charlie.y);
+  }
+};
+const CharlieMove = 10;
+
+function start() {
+  asteroids = [];
+  Charlie.x = 50;
+  Charlie.y = canvas.height/2-75;
+  interval = setInterval(asteroidLoop, 100);
+}
+
+//start();
+function changeHeight(k) {
+  if(k.keyCode==119) {
+    if(Charlie.y > 15) {
+    Charlie.y -= CharlieMove;
+    }
+  } else if (k.keyCode==115) {
+    if(Charlie.y < (canvas.height - 150)) {
+    Charlie.y += CharlieMove;
+    }
+  } else if (k.keyCode==97) {
+    if(Charlie.x > 15) {
+    Charlie.x -= CharlieMove;
+    }
+  } else if (k.keyCode==100) {
+    if(Charlie.x < (canvas.width - 250)) {
+    Charlie.x += CharlieMove;
+    }
+  }
+}
+document.getElementsByTagName('body')[0].addEventListener('keypress', changeHeight);
+
+function drawStar(cx, cy, spikes, outerRadius, innerRadius, ctx) {
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    let step = Math.PI / spikes;
+
+    ctx.strokeSyle = "#000";
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius)
+    for (i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y)
+        rot += step
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y)
+        rot += step
+    }
+    ctx.lineTo(cx, cy - outerRadius)
+    ctx.closePath();
+    ctx.lineWidth=5;
+    ctx.strokeStyle='yellow';
+    ctx.stroke();
+    ctx.fillStyle='gold';
+    ctx.fill();
+}
+
+downNum = 10;
+
+function liftOff() {
+  rising = setInterval(up, 100);
+}
+
+countdown = function () {
+  context.clearRect((canvas.width/2)-50,(canvas.height/2)-50, 100, 100);
+  context.font='50px Georgia';
+  context.fillStyle="black";
+  context.fillText(''+downNum,canvas.width/2,canvas.height/2);
+  downNum--;
+  if(downNum>=0){
+    setTimeout(countdown, 1000);
+  } else {
+    context.clearRect((canvas.width/2)-50,(canvas.height/2)-50, 100, 100);
+    context.font='50px Georgia';
+    context.fillStyle="black";
+    context.fillText("BLAST OFF!",canvas.width/2,canvas.height/2);
+    setTimeout(liftOff, 100);
+  }
+};
+
+function up() {
+  context.clearRect(0,0,canvas.width, canvas.height);
+  context.rect(0, canvas.height-50, canvas.width, canvas.width);
+  context.strokeStyle='green';
+  context.stroke();
+  context.fillStyle='green';
+  context.fill();
+  drawStar(100, 100, 50, 75, 75, context);
+  Charlie.x = 245 + Math.random()*10;
+  Charlie.y -= 5;
+  drawRocket('Up');
+  if(Charlie.y < 100) {
+    clearInterval(rising);
+    start();
+  }
+}
+
+function blastOff() {
+  context.rect(0, canvas.height-50, canvas.width, canvas.width);
+  context.strokeStyle='green';
+  context.stroke();
+  context.fillStyle='green';
+  context.fill();
+  drawStar(100, 100, 50, 75, 75, context);
+  Charlie.x = 250;
+  Charlie.y = canvas.height-110;
+  drawRocket('Up');
+  countdown();
+}
+
+blastOff();
+</script>
+
+
+
+</body></html>
